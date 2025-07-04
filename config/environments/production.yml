@@ -1,0 +1,77 @@
+environment:
+  name: "production"
+  base_url: "${PROD_BASE_URL}"
+  api_base_url: "${PROD_API_BASE_URL}"
+  
+web:
+  browser: "${PROD_BROWSER:-chrome}"
+  headless: ${PROD_HEADLESS:-true}
+  window_size: "${PROD_WINDOW_SIZE:-1920x1080}"
+  implicit_wait: ${PROD_IMPLICIT_WAIT:-10}
+  explicit_wait: ${PROD_EXPLICIT_WAIT:-30}
+  page_load_timeout: ${PROD_PAGE_LOAD_TIMEOUT:-60}
+  screenshot_on_failure: ${PROD_SCREENSHOT_ON_FAILURE:-true}
+  
+database:
+  host: "${PROD_DB_HOST}"
+  port: ${PROD_DB_PORT:-3306}
+  name: "${PROD_DB_NAME}"
+  username: "${PROD_DB_USERNAME}"
+  password: "${PROD_DB_PASSWORD}"
+  
+api:
+  timeout: ${PROD_API_TIMEOUT:-30}
+  retries: ${PROD_API_RETRIES:-2}
+  headers:
+    Content-Type: "application/json"
+    Accept: "application/json"
+  
+authentication:
+  jwt_secret: "${JWT_SECRET_PROD}"
+  token_expiry: ${PROD_TOKEN_EXPIRY:-3600}
+  refresh_expiry: ${PROD_REFRESH_EXPIRY:-2592000}
+  
+oauth:
+  google:
+    client_id: "${GOOGLE_CLIENT_ID_PROD}"
+    client_secret: "${GOOGLE_CLIENT_SECRET_PROD}"
+    redirect_uri: "${GOOGLE_REDIRECT_URI_PROD}"
+  facebook:
+    app_id: "${FACEBOOK_APP_ID_PROD}"
+    app_secret: "${FACEBOOK_APP_SECRET_PROD}"
+    redirect_uri: "${FACEBOOK_REDIRECT_URI_PROD}"
+    
+test_data:
+  default_users:
+    valid_user:
+      username: "${PROD_TEST_USER}"
+      password: "${PROD_TEST_PASSWORD}"
+      first_name: "${PROD_TEST_FIRST_NAME:-Prod}"
+      last_name: "${PROD_TEST_LAST_NAME:-User}"
+    readonly_user:
+      username: "${PROD_READONLY_USER}"
+      password: "${PROD_READONLY_PASSWORD}"
+      role: "${PROD_READONLY_ROLE:-readonly}"
+  
+logging:
+  level: "${PROD_LOG_LEVEL:-INFO}"
+  enable_console: ${PROD_LOG_ENABLE_CONSOLE:-false}
+  enable_file: ${PROD_LOG_ENABLE_FILE:-true}
+  log_file: "${PROD_LOG_FILE:-logs/prod_tests.log}"
+  
+reporting:
+  output_dir: "${PROD_REPORT_OUTPUT_DIR:-reports/production}"
+  screenshot_dir: "${PROD_REPORT_SCREENSHOT_DIR:-reports/production/screenshots}"
+  include_timestamps: ${PROD_REPORT_INCLUDE_TIMESTAMPS:-true}
+  
+features:
+  rate_limiting: ${PROD_FEATURE_RATE_LIMITING:-true}
+  caching: ${PROD_FEATURE_CACHING:-true}
+  social_login: ${PROD_FEATURE_SOCIAL_LOGIN:-true}
+  custom_vocabulary: ${PROD_FEATURE_CUSTOM_VOCABULARY:-true}
+  grammar_exercises: ${PROD_FEATURE_GRAMMAR_EXERCISES:-true}
+  
+security:
+  ssl_verify: ${PROD_SECURITY_SSL_VERIFY:-true}
+  max_redirects: ${PROD_SECURITY_MAX_REDIRECTS:-5}
+  user_agent: "${PROD_SECURITY_USER_AGENT:-WordMate-QA-Bot/1.0}"
