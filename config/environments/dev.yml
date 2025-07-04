@@ -1,0 +1,70 @@
+environment:
+  name: "development"
+  base_url: "${DEV_BASE_URL}"
+  api_base_url: "${DEV_API_BASE_URL}"
+  
+web:
+  browser: "${DEV_BROWSER:-chrome}"
+  headless: ${DEV_HEADLESS:-false}
+  window_size: "${DEV_WINDOW_SIZE:-1920x1080}"
+  implicit_wait: ${DEV_IMPLICIT_WAIT:-10}
+  explicit_wait: ${DEV_EXPLICIT_WAIT:-30}
+  page_load_timeout: ${DEV_PAGE_LOAD_TIMEOUT:-60}
+  screenshot_on_failure: ${DEV_SCREENSHOT_ON_FAILURE:-true}
+  
+database:
+  host: "${DB_HOST}"
+  port: ${DB_PORT:-3306}
+  name: "${DB_NAME}"
+  username: "${DB_USERNAME}"
+  password: "${DB_PASSWORD}"
+  
+api:
+  timeout: ${DEV_API_TIMEOUT:-30}
+  retries: ${DEV_API_RETRIES:-3}
+  headers:
+    Content-Type: "application/json"
+    Accept: "application/json"
+  
+authentication:
+  jwt_secret: "${JWT_SECRET_DEV}"
+  token_expiry: ${DEV_TOKEN_EXPIRY:-3600}
+  refresh_expiry: ${DEV_REFRESH_EXPIRY:-2592000}
+  
+oauth:
+  google:
+    client_id: "${GOOGLE_CLIENT_ID_DEV}"
+    redirect_uri: "${GOOGLE_GOOGLE_REDIRECT_URI_DEV}"
+  facebook:
+    app_id: "${FACEBOOK_APP_ID_DEV}"
+    redirect_uri: "${FACEBOOK_REDIRECT_URI_DEV}"
+    
+test_data:
+  default_users:
+    valid_user:
+      username: "${DEV_TEST_USER}"
+      password: "${DEV_TEST_PASSWORD}"
+      first_name: "${DEV_TEST_FIRST_NAME:-Test}"
+      last_name: "${DEV_TEST_LAST_NAME:-User}"
+    admin_user:
+      username: "${DEV_ADMIN_USER}" 
+      password: "${DEV_ADMIN_PASSWORD}"
+      role: "${DEV_ADMIN_ROLE:-admin}"
+  
+logging:
+  level: "${DEV_LOG_LEVEL:-DEBUG}"
+  enable_console: ${DEV_LOG_ENABLE_CONSOLE:-true}
+  enable_file: ${DEV_LOG_ENABLE_FILE:-true}
+  log_file: "${DEV_LOG_FILE:-logs/dev_tests.log}"
+  
+reporting:
+  output_dir: "${DEV_REPORT_OUTPUT_DIR:-reports/dev}"
+  screenshot_dir: "${DEV_REPORT_SCREENSHOT_DIR:-reports/dev/screenshots}"
+  include_timestamps: ${DEV_REPORT_INCLUDE_TIMESTAMPS:-true}
+  
+features:
+  rate_limiting: ${DEV_FEATURE_RATE_LIMITING:-true}
+  caching: ${DEV_FEATURE_CACHING:-true}
+  social_login: ${DEV_FEATURE_SOCIAL_LOGIN:-true}
+  custom_vocabulary: ${DEV_FEATURE_CUSTOM_VOCABULARY:-true}
+  grammar_exercises: ${DEV_FEATURE_GRAMMAR_EXERCISES:-true}
