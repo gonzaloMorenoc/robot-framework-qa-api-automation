@@ -65,24 +65,24 @@ Create a `.env` file in the project root:
 
 ```bash
 # Database Configuration
-DB_PASSWORD=your_actual_database_password
-DB_HOST=localhost
-DB_NAME=u796724541_englishAppDB
-DB_USERNAME=u796724541_adminGMC
+DB_PASSWORD=<your_database_password>
+DB_HOST=<your_database_host>
+DB_NAME=<your_database_name>
+DB_USERNAME=<your_database_username>
 
 # Test User Credentials
-DEV_TEST_USER=your_dev_user@wordmate.es
-DEV_TEST_PASSWORD=your_dev_password
-PROD_TEST_USER=your_prod_user@wordmate.es
-PROD_TEST_PASSWORD=your_prod_password
+DEV_TEST_USER=<your_dev_user_email>
+DEV_TEST_PASSWORD=<your_dev_password>
+PROD_TEST_USER=<your_prod_user_email>
+PROD_TEST_PASSWORD=<your_prod_password>
 
 # JWT Secrets
-JWT_SECRET_PROD=your_production_jwt_secret
-JWT_REFRESH_SECRET_PROD=your_refresh_secret
+JWT_SECRET_PROD=<your_jwt_secret>
+JWT_REFRESH_SECRET_PROD=<your_jwt_refresh_secret>
 
 # OAuth Credentials
-GOOGLE_CLIENT_ID_PROD=your_google_client_id
-GOOGLE_CLIENT_SECRET_PROD=your_google_client_secret
+GOOGLE_CLIENT_ID_PROD=<your_google_client_id>
+GOOGLE_CLIENT_SECRET_PROD=<your_google_client_secret>
 ```
 
 ### CI/CD Environments
