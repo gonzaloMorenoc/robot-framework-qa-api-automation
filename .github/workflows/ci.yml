@@ -176,7 +176,7 @@ jobs:
         safety check
         
     - name: Upload security scan results
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-scan-results
@@ -235,7 +235,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload API test results
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: api-test-results-${{ matrix.test_type }}
@@ -313,7 +313,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload UI test results
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: ui-test-results-${{ matrix.test_type }}-${{ matrix.browser }}
@@ -323,7 +323,7 @@ jobs:
         retention-days: 30
         
     - name: Upload screenshots
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: ui-test-screenshots-${{ matrix.test_type }}-${{ matrix.browser }}
@@ -388,7 +388,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload smoke test results
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: smoke-test-results
@@ -453,7 +453,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload integration test results
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: integration-test-results
@@ -502,7 +502,7 @@ jobs:
       continue-on-error: true
       
     - name: Upload consolidated report
-      uses: uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: consolidated-test-report
