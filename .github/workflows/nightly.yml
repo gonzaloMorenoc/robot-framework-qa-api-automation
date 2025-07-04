@@ -1,0 +1,752 @@
+name: WordMate QA - Nightly Tests
+
+on:
+  schedule:
+    # Run nightly tests at 2 AM UTC (3 AM CET, 4 AM CEST)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - production
+      test_depth:
+        description: 'Test depth level'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+        - smoke
+        - regression
+        - full
+        - performance
+      browsers:
+        description: 'Browsers to test (comma-separated)'
+        required: false
+        default: 'chrome,firefox,edge'
+        type: string
+      parallel_processes:
+        description: 'Number of parallel processes'
+        required: false
+        default: '4'
+        type: string
+
+env:
+  PYTHON_VERSION: '3.11'
+  
+jobs:
+  setup_nightly:
+    name: Setup Nightly Test Configuration
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.config.outputs.environment }}
+      test_depth: ${{ steps.config.outputs.test_depth }}
+      browsers: ${{ steps.config.outputs.browsers }}
+      parallel_processes: ${{ steps.config.outputs.parallel_processes }}
+      test_matrix: ${{ steps.config.outputs.test_matrix }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure nightly test parameters
+      id: config
+      run: |
+        # Set default values for scheduled runs
+        if [ "${{ github.event_name }}" = "schedule" ]; then
+          ENVIRONMENT="dev"
+          TEST_DEPTH="full"
+          BROWSERS="chrome,firefox,edge"
+          PARALLEL_PROCESSES="4"
+        else
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          TEST_DEPTH="${{ github.event.inputs.test_depth }}"
+          BROWSERS="${{ github.event.inputs.browsers }}"
+          PARALLEL_PROCESSES="${{ github.event.inputs.parallel_processes }}"
+        fi
+        
+        echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+        echo "test_depth=$TEST_DEPTH" >> $GITHUB_OUTPUT
+        echo "browsers=$BROWSERS" >> $GITHUB_OUTPUT
+        echo "parallel_processes=$PARALLEL_PROCESSES" >> $GITHUB_OUTPUT
+        
+        # Create test matrix based on depth
+        if [ "$TEST_DEPTH" = "smoke" ]; then
+          TEST_MATRIX='["smoke"]'
+        elif [ "$TEST_DEPTH" = "regression" ]; then
+          TEST_MATRIX='["api", "ui", "integration"]'
+        elif [ "$TEST_DEPTH" = "full" ]; then
+          TEST_MATRIX='["api", "ui", "integration", "performance"]'
+        elif [ "$TEST_DEPTH" = "performance" ]; then
+          TEST_MATRIX='["performance"]'
+        fi
+        
+        echo "test_matrix=$TEST_MATRIX" >> $GITHUB_OUTPUT
+        
+        echo "Nightly test configuration:"
+        echo "  Environment: $ENVIRONMENT"
+        echo "  Test Depth: $TEST_DEPTH"
+        echo "  Browsers: $BROWSERS"
+        echo "  Parallel Processes: $PARALLEL_PROCESSES"
+        echo "  Test Matrix: $TEST_MATRIX"
+    
+    - name: Validate environment availability
+      run: |
+        echo "Validating environment availability..."
+        if [ "${{ steps.config.outputs.environment }}" = "production" ]; then
+          echo "🔍 Production environment selected - extra validations enabled"
+        fi
+        
+        # Check if configuration files exist
+        if [ ! -f "config/environments/${{ steps.config.outputs.environment }}.yaml" ]; then
+          echo "❌ Environment configuration file not found"
+          exit 1
+        fi
+        
+        echo "✅ Environment configuration validated"
+
+  health_check:
+    name: Pre-Test Health Check
+    runs-on: ubuntu-latest
+    needs: setup_nightly
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests pyyaml
+        
+    - name: Check application health
+      env:
+        ENVIRONMENT: ${{ needs.setup_nightly.outputs.environment }}
+      run: |
+        python -c "
+        import requests
+        import yaml
+        import sys
+        
+        # Load environment config
+        with open('config/environments/${{ needs.setup_nightly.outputs.environment }}.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+        
+        base_url = config['environment']['base_url']
+        api_url = config['environment']['api_base_url']
+        
+        print(f'Checking health of {base_url}...')
+        
+        try:
+            # Check main application
+            response = requests.get(base_url, timeout=30)
+            print(f'Main app status: {response.status_code}')
+            
+            # Check API health endpoint
+            health_response = requests.get(f'{api_url}?endpoint=health', timeout=30)
+            print(f'API health status: {health_response.status_code}')
+            
+            if response.status_code != 200 or health_response.status_code != 200:
+                print('❌ Health check failed - application not ready')
+                sys.exit(1)
+            else:
+                print('✅ Health check passed - application is ready')
+                
+        except Exception as e:
+            print(f'❌ Health check failed: {str(e)}')
+            sys.exit(1)
+        "
+
+  comprehensive_api_tests:
+    name: Comprehensive API Tests
+    runs-on: ubuntu-latest
+    needs: [setup_nightly, health_check]
+    if: contains(fromJson(needs.setup_nightly.outputs.test_matrix), 'api')
+    strategy:
+      fail-fast: false
+      matrix:
+        test_category: [auth, vocabulary, grammar, user, folders, integration]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-nightly-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-nightly-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create detailed reports directory
+      run: |
+        mkdir -p reports/nightly/api/${{ matrix.test_category }}
+        mkdir -p logs/nightly/api/${{ matrix.test_category }}
+        
+    - name: Run comprehensive API tests
+      env:
+        ENVIRONMENT: ${{ needs.setup_nightly.outputs.environment }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        JWT_SECRET_PROD: ${{ secrets.JWT_SECRET_PROD }}
+        GOOGLE_CLIENT_ID_PROD: ${{ secrets.GOOGLE_CLIENT_ID_PROD }}
+        FACEBOOK_APP_ID_PROD: ${{ secrets.FACEBOOK_APP_ID_PROD }}
+        PROD_TEST_USER: ${{ secrets.PROD_TEST_USER }}
+        PROD_TEST_PASSWORD: ${{ secrets.PROD_TEST_PASSWORD }}
+        PROD_READONLY_USER: ${{ secrets.PROD_READONLY_USER }}
+        PROD_READONLY_PASSWORD: ${{ secrets.PROD_READONLY_PASSWORD }}
+      run: |
+        python scripts/run_tests.py \
+          --env ${{ needs.setup_nightly.outputs.environment }} \
+          --suite api/${{ matrix.test_category }} \
+          --include-tags regression \
+          --parallel ${{ needs.setup_nightly.outputs.parallel_processes }} \
+          --log-level DEBUG \
+          --verbose
+      continue-on-error: true
+      
+    - name: Generate API test metrics
+      if: always()
+      run: |
+        python -c "
+        import json
+        import xml.etree.ElementTree as ET
+        import glob
+        
+        metrics = {
+            'category': '${{ matrix.test_category }}',
+            'environment': '${{ needs.setup_nightly.outputs.environment }}',
+            'total_tests': 0,
+            'passed_tests': 0,
+            'failed_tests': 0,
+            'execution_time': 0
+        }
+        
+        # Parse Robot Framework output.xml files
+        for xml_file in glob.glob('reports/nightly/api/${{ matrix.test_category }}/*.xml'):
+            try:
+                tree = ET.parse(xml_file)
+                root = tree.getroot()
+                
+                # Extract test statistics
+                stats = root.find('.//statistics/total/stat')
+                if stats is not None:
+                    metrics['total_tests'] += int(stats.get('pass', 0)) + int(stats.get('fail', 0))
+                    metrics['passed_tests'] += int(stats.get('pass', 0))
+                    metrics['failed_tests'] += int(stats.get('fail', 0))
+                
+                # Extract execution time
+                suite = root.find('.//suite')
+                if suite is not None:
+                    elapsed = suite.find('.//status').get('elapsed')
+                    if elapsed:
+                        metrics['execution_time'] += int(elapsed)
+                        
+            except Exception as e:
+                print(f'Error parsing {xml_file}: {e}')
+        
+        # Save metrics
+        with open('reports/nightly/api/${{ matrix.test_category }}/metrics.json', 'w') as f:
+            json.dump(metrics, f, indent=2)
+        
+        print(f'API Test Metrics for ${{ matrix.test_category }}:')
+        print(f'  Total: {metrics[\"total_tests\"]}')
+        print(f'  Passed: {metrics[\"passed_tests\"]}')
+        print(f'  Failed: {metrics[\"failed_tests\"]}')
+        print(f'  Execution Time: {metrics[\"execution_time\"]}ms')
+        "
+        
+    - name: Upload API test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: nightly-api-results-${{ matrix.test_category }}
+        path: |
+          reports/nightly/api/${{ matrix.test_category }}/
+          logs/nightly/api/${{ matrix.test_category }}/
+        retention-days: 30
+
+  cross_browser_ui_tests:
+    name: Cross-Browser UI Tests
+    runs-on: ubuntu-latest
+    needs: [setup_nightly, health_check]
+    if: contains(fromJson(needs.setup_nightly.outputs.test_matrix), 'ui')
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ["chrome", "firefox", "edge"]
+        test_suite: [auth, vocabulary, grammar, navigation, responsive]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-nightly-pip-${{ hashFiles('**/requirements.txt') }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Setup browsers
+      run: |
+        if [ "${{ matrix.browser }}" = "chrome" ]; then
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+        elif [ "${{ matrix.browser }}" = "firefox" ]; then
+          sudo apt-get update
+          sudo apt-get install -y firefox
+        elif [ "${{ matrix.browser }}" = "edge" ]; then
+          curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+          sudo install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/
+          sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/trusted.gpg.d/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge-dev.list'
+          sudo apt-get update
+          sudo apt-get install -y microsoft-edge-stable
+        fi
+        
+    - name: Install WebDriver
+      run: |
+        python scripts/setup_environment.py --update-drivers
+        
+    - name: Create reports directory
+      run: |
+        mkdir -p reports/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}
+        mkdir -p logs/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}
+        
+    - name: Run cross-browser UI tests
+      env:
+        ENVIRONMENT: ${{ needs.setup_nightly.outputs.environment }}
+        BROWSER: ${{ matrix.browser }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1920x1080x24 &
+        sleep 3
+        
+        python scripts/run_tests.py \
+          --env ${{ needs.setup_nightly.outputs.environment }} \
+          --suite ui/${{ matrix.test_suite }} \
+          --include-tags regression \
+          --log-level DEBUG \
+          --verbose
+      continue-on-error: true
+      
+    - name: Capture browser logs
+      if: always()
+      run: |
+        echo "Browser: ${{ matrix.browser }}" > reports/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}/browser_info.txt
+        echo "Test Suite: ${{ matrix.test_suite }}" >> reports/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}/browser_info.txt
+        echo "Environment: ${{ needs.setup_nightly.outputs.environment }}" >> reports/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}/browser_info.txt
+        
+    - name: Upload UI test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: nightly-ui-results-${{ matrix.test_suite }}-${{ matrix.browser }}
+        path: |
+          reports/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}/
+          logs/nightly/ui/${{ matrix.test_suite }}/${{ matrix.browser }}/
+        retention-days: 30
+        
+    - name: Upload screenshots on failure
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: nightly-ui-screenshots-${{ matrix.test_suite }}-${{ matrix.browser }}
+        path: reports/**/screenshots/
+        retention-days: 7
+
+  performance_tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [setup_nightly, health_check]
+    if: contains(fromJson(needs.setup_nightly.outputs.test_matrix), 'performance')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install locust
+        
+    - name: Create performance reports directory
+      run: |
+        mkdir -p reports/nightly/performance
+        mkdir -p logs/nightly/performance
+        
+    - name: Run API performance tests
+      env:
+        ENVIRONMENT: ${{ needs.setup_nightly.outputs.environment }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        python scripts/run_tests.py \
+          --env ${{ needs.setup_nightly.outputs.environment }} \
+          --include-tags performance \
+          --log-level INFO \
+          --verbose
+      continue-on-error: true
+      
+    - name: Run load testing with Locust
+      env:
+        ENVIRONMENT: ${{ needs.setup_nightly.outputs.environment }}
+      run: |
+        # Create a simple Locust script for load testing
+        cat > locustfile.py << 'EOF'
+        from locust import HttpUser, task, between
+        import yaml
+        
+        with open('config/environments/${{ needs.setup_nightly.outputs.environment }}.yaml', 'r') as f:
+            config = yaml.safe_load(f)
+        
+        class WordMateUser(HttpUser):
+            wait_time = between(1, 3)
+            
+            def on_start(self):
+                self.host = config['environment']['api_base_url']
+            
+            @task(3)
+            def get_vocabulary(self):
+                self.client.get("?endpoint=vocabulario&limit=50")
+            
+            @task(2)
+            def health_check(self):
+                self.client.get("?endpoint=health")
+            
+            @task(1)
+            def get_grammar_exercises(self):
+                self.client.get("?endpoint=grammarExercises")
+        EOF
+        
+        # Run load test for 2 minutes with 10 users
+        locust --headless --users 10 --spawn-rate 2 --run-time 2m --html reports/nightly/performance/load_test_report.html
+      continue-on-error: true
+      
+    - name: Generate performance summary
+      run: |
+        python -c "
+        import json
+        import os
+        from datetime import datetime
+        
+        summary = {
+            'timestamp': datetime.now().isoformat(),
+            'environment': '${{ needs.setup_nightly.outputs.environment }}',
+            'load_test_completed': os.path.exists('reports/nightly/performance/load_test_report.html'),
+            'performance_tests_completed': True
+        }
+        
+        with open('reports/nightly/performance/summary.json', 'w') as f:
+            json.dump(summary, f, indent=2)
+        
+        print('Performance test summary generated')
+        "
+        
+    - name: Upload performance test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: nightly-performance-results
+        path: |
+          reports/nightly/performance/
+          logs/nightly/performance/
+        retention-days: 30
+
+  integration_tests:
+    name: End-to-End Integration Tests
+    runs-on: ubuntu-latest
+    needs: [setup_nightly, health_check, comprehensive_api_tests]
+    if: contains(fromJson(needs.setup_nightly.outputs.test_matrix), 'integration')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@latest
+      
+    - name: Install WebDriver
+      run: |
+        python scripts/setup_environment.py --update-drivers
+        
+    - name: Create integration reports directory
+      run: |
+        mkdir -p reports/nightly/integration
+        mkdir -p logs/nightly/integration
+        
+    - name: Run end-to-end integration tests
+      env:
+        ENVIRONMENT: ${{ needs.setup_nightly.outputs.environment }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1920x1080x24 &
+        
+        python scripts/run_tests.py \
+          --env ${{ needs.setup_nightly.outputs.environment }} \
+          --suite integration \
+          --include-tags regression \
+          --parallel 2 \
+          --log-level INFO \
+          --verbose
+      continue-on-error: true
+      
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: nightly-integration-results
+        path: |
+          reports/nightly/integration/
+          logs/nightly/integration/
+        retention-days: 30
+
+  generate_nightly_report:
+    name: Generate Nightly Test Report
+    runs-on: ubuntu-latest
+    needs: [setup_nightly, comprehensive_api_tests, cross_browser_ui_tests, performance_tests, integration_tests]
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install jinja2 matplotlib
+        
+    - name: Download all nightly test artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: nightly-artifacts
+        
+    - name: Generate comprehensive nightly report
+      run: |
+        python -c "
+        import json
+        import os
+        import glob
+        from datetime import datetime
+        import xml.etree.ElementTree as ET
+        
+        # Initialize report data
+        report_data = {
+            'timestamp': datetime.now().isoformat(),
+            'environment': '${{ needs.setup_nightly.outputs.environment }}',
+            'test_depth': '${{ needs.setup_nightly.outputs.test_depth }}',
+            'browsers': '${{ needs.setup_nightly.outputs.browsers }}',
+            'summary': {
+                'total_tests': 0,
+                'passed_tests': 0,
+                'failed_tests': 0,
+                'skipped_tests': 0,
+                'execution_time_ms': 0
+            },
+            'categories': {}
+        }
+        
+        # Process all XML results
+        for xml_file in glob.glob('nightly-artifacts/**/*.xml', recursive=True):
+            try:
+                tree = ET.parse(xml_file)
+                root = tree.getroot()
+                
+                # Extract statistics
+                stats = root.find('.//statistics/total/stat')
+                if stats is not None:
+                    passed = int(stats.get('pass', 0))
+                    failed = int(stats.get('fail', 0))
+                    
+                    report_data['summary']['total_tests'] += passed + failed
+                    report_data['summary']['passed_tests'] += passed
+                    report_data['summary']['failed_tests'] += failed
+                
+                # Extract execution time
+                suite = root.find('.//suite')
+                if suite is not None:
+                    status = suite.find('.//status')
+                    if status is not None:
+                        elapsed = status.get('elapsed')
+                        if elapsed:
+                            report_data['summary']['execution_time_ms'] += int(elapsed)
+                            
+            except Exception as e:
+                print(f'Error processing {xml_file}: {e}')
+        
+        # Calculate success rate
+        total = report_data['summary']['total_tests']
+        if total > 0:
+            success_rate = (report_data['summary']['passed_tests'] / total) * 100
+            report_data['summary']['success_rate'] = round(success_rate, 2)
+        else:
+            report_data['summary']['success_rate'] = 0
+        
+        # Save report
+        os.makedirs('reports/nightly/consolidated', exist_ok=True)
+        with open('reports/nightly/consolidated/nightly_report.json', 'w') as f:
+            json.dump(report_data, f, indent=2)
+        
+        # Print summary
+        print('=== NIGHTLY TEST REPORT ===')
+        print(f'Environment: {report_data[\"environment\"]}')
+        print(f'Test Depth: {report_data[\"test_depth\"]}')
+        print(f'Total Tests: {report_data[\"summary\"][\"total_tests\"]}')
+        print(f'Passed: {report_data[\"summary\"][\"passed_tests\"]}')
+        print(f'Failed: {report_data[\"summary\"][\"failed_tests\"]}')
+        print(f'Success Rate: {report_data[\"summary\"][\"success_rate\"]}%')
+        print(f'Execution Time: {report_data[\"summary\"][\"execution_time_ms\"]}ms')
+        "
+        
+    - name: Create HTML report
+      run: |
+        python scripts/generate_report.py \
+          --input-dir nightly-artifacts \
+          --output-dir reports/nightly/consolidated \
+          --environment ${{ needs.setup_nightly.outputs.environment }} \
+          --report-type nightly
+      continue-on-error: true
+      
+    - name: Upload consolidated nightly report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: nightly-consolidated-report
+        path: reports/nightly/consolidated/
+        retention-days: 90
+
+  notify_results:
+    name: Notify Test Results
+    runs-on: ubuntu-latest
+    needs: [setup_nightly, generate_nightly_report, comprehensive_api_tests, cross_browser_ui_tests, performance_tests, integration_tests]
+    if: always()
+    
+    steps:
+    - name: Determine overall nightly status
+      id: status
+      run: |
+        api_status="${{ needs.comprehensive_api_tests.result }}"
+        ui_status="${{ needs.cross_browser_ui_tests.result }}"
+        perf_status="${{ needs.performance_tests.result }}"
+        integration_status="${{ needs.integration_tests.result }}"
+        
+        if [[ "$api_status" == "success" && "$ui_status" == "success" && 
+              "$perf_status" == "success" && "$integration_status" == "success" ]]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=All nightly tests passed! 🌙✅" >> $GITHUB_OUTPUT
+          echo "emoji=✅" >> $GITHUB_OUTPUT
+        elif [[ "$api_status" == "failure" || "$ui_status" == "failure" || 
+                "$perf_status" == "failure" || "$integration_status" == "failure" ]]; then
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "message=Some nightly tests failed! 🌙❌" >> $GITHUB_OUTPUT
+          echo "emoji=❌" >> $GITHUB_OUTPUT
+        else
+          echo "status=warning" >> $GITHUB_OUTPUT
+          echo "message=Nightly tests completed with warnings! 🌙⚠️" >> $GITHUB_OUTPUT
+          echo "emoji=⚠️" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create issue on failure
+      if: steps.status.outputs.status == 'failure' && needs.setup_nightly.outputs.environment == 'production'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const title = '🌙 Nightly Test Failure - ${{ needs.setup_nightly.outputs.environment }}';
+          const body = `
+          ## Nightly Test Failure Report
+          
+          **Environment:** ${{ needs.setup_nightly.outputs.environment }}
+          **Date:** ${new Date().toISOString().split('T')[0]}
+          **Test Depth:** ${{ needs.setup_nightly.outputs.test_depth }}
+          **Status:** ${{ steps.status.outputs.status }}
+          
+          ### Test Results:
+          - **API Tests:** ${{ needs.comprehensive_api_tests.result }}
+          - **UI Tests:** ${{ needs.cross_browser_ui_tests.result }}
+          - **Performance Tests:** ${{ needs.performance_tests.result }}
+          - **Integration Tests:** ${{ needs.integration_tests.result }}
+          
+          ### Artifacts:
+          - [Nightly Report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - [Consolidated Results](nightly-consolidated-report)
+          
+          ### Next Steps:
+          1. Review failed test details
+          2. Identify root cause
+          3. Create fix PR
+          4. Re-run nightly tests
+          
+          **Workflow Run:** https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['bug', 'nightly-failure', 'high-priority']
+          });
+          
+    - name: Send notification summary
+      run: |
+        echo "=== NIGHTLY TEST NOTIFICATION ==="
+        echo "Status: ${{ steps.status.outputs.status }}"
+        echo "Message: ${{ steps.status.outputs.message }}"
+        echo "Environment: ${{ needs.setup_nightly.outputs.environment }}"
+        echo "Test Depth: ${{ needs.setup_nightly.outputs.test_depth }}"
+        echo "Browsers: ${{ needs.setup_nightly.outputs.browsers }}"
+        echo "Workflow: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        echo "================================="

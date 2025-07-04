@@ -1,0 +1,344 @@
+# Test vocabulary data for WordMate application testing
+
+# Sample vocabulary words for testing
+sample_words:
+  basic_words:
+    - word: "apple"
+      definition: "A round fruit with red or green skin and white flesh"
+      pronunciation: "/ˈæpəl/"
+      difficulty: "beginner"
+      category: "food"
+      part_of_speech: "noun"
+      example: "I eat an apple every day for breakfast."
+      
+    - word: "beautiful"
+      definition: "Pleasing to look at; attractive"
+      pronunciation: "/ˈbjuːtɪfəl/"
+      difficulty: "beginner"
+      category: "adjectives"
+      part_of_speech: "adjective"
+      example: "The sunset was beautiful tonight."
+      
+    - word: "computer"
+      definition: "An electronic device for processing and storing data"
+      pronunciation: "/kəmˈpjuːtər/"
+      difficulty: "intermediate"
+      category: "technology"
+      part_of_speech: "noun"
+      example: "I use my computer for work and entertainment."
+      
+    - word: "extraordinary"
+      definition: "Very unusual or remarkable"
+      pronunciation: "/ɪkˈstrɔːrdɪneri/"
+      difficulty: "advanced"
+      category: "adjectives"
+      part_of_speech: "adjective"
+      example: "Her performance was extraordinary."
+
+  advanced_words:
+    - word: "serendipity"
+      definition: "The occurrence of events by chance in a happy way"
+      pronunciation: "/ˌserənˈdɪpɪti/"
+      difficulty: "advanced"
+      category: "abstract"
+      part_of_speech: "noun"
+      example: "Meeting my business partner was pure serendipity."
+      
+    - word: "ubiquitous"
+      definition: "Present, appearing, or found everywhere"
+      pronunciation: "/juːˈbɪkwɪtəs/"
+      difficulty: "advanced"
+      category: "descriptive"
+      part_of_speech: "adjective"
+      example: "Smartphones have become ubiquitous in modern society."
+      
+    - word: "perspicacious"
+      definition: "Having a ready insight into and understanding of things"
+      pronunciation: "/ˌpɜːrspɪˈkeɪʃəs/"
+      difficulty: "advanced"
+      category: "personality"
+      part_of_speech: "adjective"
+      example: "The detective's perspicacious observations solved the case."
+
+# Test data for custom vocabulary creation
+custom_vocabulary_test_data:
+  valid_entries:
+    - word: "testword1"
+      definition: "First test word for automation testing"
+      pronunciation: "/ˈtestˌwɜrd/"
+      notes: "Created for automated testing"
+      
+    - word: "automation"
+      definition: "The use of technology to perform tasks without human intervention"
+      pronunciation: "/ˌɔːtəˈmeɪʃən/"
+      notes: "Related to software testing"
+      
+    - word: "regression"
+      definition: "Testing to ensure new changes don't break existing functionality"
+      pronunciation: "/rɪˈɡreʃən/"
+      notes: "Software testing term"
+
+  invalid_entries:
+    - word: ""  # Empty word
+      definition: "Empty word test"
+      
+    - word: "validword"
+      definition: ""  # Empty definition
+      
+    - word: "x" * 101  # Too long word
+      definition: "Word that exceeds maximum length"
+      
+    - word: "special<>chars"
+      definition: "Word with special characters"
+
+# Test data for vocabulary search
+search_test_data:
+  valid_searches:
+    - search_term: "apple"
+      expected_results: 1
+      
+    - search_term: "beautiful"
+      expected_results: 1
+      
+    - search_term: "test"
+      expected_results: 0  # No real words contain "test"
+      
+    - search_term: "comp"  # Partial search
+      expected_results: 1  # Should find "computer"
+
+  edge_case_searches:
+    - search_term: ""  # Empty search
+      expected_behavior: "show_all_words"
+      
+    - search_term: "xyzneverexists"
+      expected_behavior: "no_results"
+      
+    - search_term: "a"  # Single character
+      expected_behavior: "show_matching_words"
+
+# Test data for vocabulary filters
+filter_test_data:
+  difficulty_filters:
+    - filter: "beginner"
+      expected_words: ["apple", "beautiful"]
+      
+    - filter: "intermediate" 
+      expected_words: ["computer"]
+      
+    - filter: "advanced"
+      expected_words: ["extraordinary", "serendipity", "ubiquitous"]
+
+  category_filters:
+    - filter: "food"
+      expected_words: ["apple"]
+      
+    - filter: "technology"
+      expected_words: ["computer"]
+      
+    - filter: "adjectives"
+      expected_words: ["beautiful", "extraordinary"]
+
+  combined_filters:
+    - difficulty: "beginner"
+      category: "food"
+      expected_words: ["apple"]
+      
+    - difficulty: "advanced"
+      category: "adjectives"
+      expected_words: ["extraordinary"]
+
+# Test data for folder management
+folder_test_data:
+  valid_folders:
+    - name: "My Favorite Words"
+      color: "#007bff"
+      icon: "heart"
+      description: "Collection of my favorite vocabulary words"
+      
+    - name: "Work Vocabulary"
+      color: "#28a745"
+      icon: "briefcase"
+      description: "Professional vocabulary for work"
+      
+    - name: "Travel Words"
+      color: "#ffc107"
+      icon: "plane"
+      description: "Useful words for traveling"
+
+  invalid_folders:
+    - name: ""  # Empty name
+      color: "#007bff"
+      icon: "folder"
+      
+    - name: "x" * 101  # Too long name
+      color: "#007bff"
+      icon: "folder"
+      
+    - name: "Test Folder"
+      color: "invalid-color"  # Invalid color
+      icon: "folder"
+
+# Test data for vocabulary import/export
+import_export_test_data:
+  valid_csv_data: |
+    word,definition,pronunciation,difficulty,category
+    hello,A greeting,/həˈloʊ/,beginner,greetings
+    goodbye,A farewell,/ɡʊdˈbaɪ/,beginner,greetings
+    fantastic,Extremely good,/fænˈtæstɪk/,intermediate,adjectives
+    
+  invalid_csv_data: |
+    word,definition
+    hello  # Missing pronunciation and other fields
+    ,empty word
+    valid_word,  # Missing definition
+    
+  export_formats:
+    - format: "csv"
+      mime_type: "text/csv"
+      
+    - format: "json"
+      mime_type: "application/json"
+      
+    - format: "xlsx"
+      mime_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+# Test data for vocabulary statistics
+statistics_test_data:
+  user_progress:
+    total_words_available: 1000
+    words_learned: 150
+    words_favorite: 75
+    daily_study_streak: 15
+    weekly_goal: 50
+    monthly_goal: 200
+    
+  learning_analytics:
+    words_per_day: 10
+    average_study_time: 30  # minutes
+    most_difficult_category: "advanced"
+    favorite_category: "technology"
+    learning_curve_trend: "improving"
+
+# Test data for vocabulary games and quizzes
+quiz_test_data:
+  multiple_choice_questions:
+    - word: "beautiful"
+      correct_definition: "Pleasing to look at; attractive"
+      incorrect_options:
+        - "Very large in size"
+        - "Making a loud noise"
+        - "Difficult to understand"
+        
+    - word: "computer"
+      correct_definition: "An electronic device for processing data"
+      incorrect_options:
+        - "A type of furniture"
+        - "A musical instrument"
+        - "A cooking utensil"
+
+  fill_in_the_blank:
+    - sentence: "The sunset was _____ tonight."
+      correct_answer: "beautiful"
+      word_options: ["beautiful", "computer", "apple"]
+      
+    - sentence: "I use my _____ for work."
+      correct_answer: "computer"
+      word_options: ["computer", "beautiful", "apple"]
+
+# Test data for pronunciation features
+pronunciation_test_data:
+  audio_files:
+    - word: "apple"
+      audio_url: "/audio/apple.mp3"
+      duration: 1.2  # seconds
+      
+    - word: "beautiful"
+      audio_url: "/audio/beautiful.mp3"
+      duration: 1.8
+      
+    - word: "computer"
+      audio_url: "/audio/computer.mp3"
+      duration: 1.5
+
+  pronunciation_variants:
+    - word: "either"
+      us_pronunciation: "/ˈiːðər/"
+      uk_pronunciation: "/ˈaɪðər/"
+      
+    - word: "schedule"
+      us_pronunciation: "/ˈskedʒuːl/"
+      uk_pronunciation: "/ˈʃedjuːl/"
+
+# Test data for vocabulary difficulty levels
+difficulty_levels:
+  beginner:
+    word_count_range: [3, 8]  # letters
+    syllable_range: [1, 2]
+    frequency_rank: [1, 1000]  # most common words
+    
+  intermediate:
+    word_count_range: [6, 12]
+    syllable_range: [2, 4]
+    frequency_rank: [1001, 5000]
+    
+  advanced:
+    word_count_range: [8, 20]
+    syllable_range: [3, 6]
+    frequency_rank: [5001, 50000]
+
+# Test data for vocabulary categories
+categories:
+  common_categories:
+    - name: "Animals"
+      icon: "🐾"
+      description: "Words related to animals and wildlife"
+      
+    - name: "Food & Drink"
+      icon: "🍽️"
+      description: "Culinary vocabulary and dining terms"
+      
+    - name: "Technology"
+      icon: "💻"
+      description: "Modern technology and digital terms"
+      
+    - name: "Travel"
+      icon: "✈️"
+      description: "Transportation and travel-related vocabulary"
+      
+    - name: "Business"
+      icon: "💼"
+      description: "Professional and business terminology"
+
+# Performance test data
+performance_test_data:
+  large_vocabulary_set:
+    word_count: 10000
+    search_performance_threshold: 2.0  # seconds
+    load_performance_threshold: 5.0   # seconds
+    
+  bulk_operations:
+    bulk_favorite_count: 100
+    bulk_learned_count: 150
+    bulk_delete_count: 50
+    
+  concurrent_users:
+    simultaneous_searches: 20
+    concurrent_favorites: 10
+    parallel_imports: 5
+
+# Test data for vocabulary API endpoints
+api_test_data:
+  pagination:
+    default_page_size: 50
+    max_page_size: 200
+    test_page_sizes: [10, 25, 50, 100]
+    
+  rate_limiting:
+    requests_per_minute: 200
+    burst_limit: 50
+    
+  response_formats:
+    - format: "json"
+      content_type: "application/json"
+    - format: "xml"
+      content_type: "application/xml"
