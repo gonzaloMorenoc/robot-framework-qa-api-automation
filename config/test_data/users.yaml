@@ -1,0 +1,299 @@
+# Test user data for WordMate application testing
+# IMPORTANT: Real credentials are loaded from environment variables
+# This file contains only structure and example data
+
+# Valid test users for different scenarios
+valid_users:
+  basic_user:
+    username: "${TEST_USER_EMAIL:-test.user@wordmate.es}"
+    password: "${TEST_USER_PASSWORD:-TestPassword123!}"
+    first_name: "Test"
+    last_name: "User"
+    email: "${TEST_USER_EMAIL:-test.user@wordmate.es}"
+    role: "user"
+    status: "active"
+    created_date: "2024-01-15"
+    
+  premium_user:
+    username: "${PREMIUM_USER_EMAIL:-premium.user@wordmate.es}"
+    password: "${PREMIUM_USER_PASSWORD:-PremiumPass456!}"
+    first_name: "Premium"
+    last_name: "User"
+    email: "${PREMIUM_USER_EMAIL:-premium.user@wordmate.es}"
+    role: "premium"
+    status: "active"
+    subscription: "premium"
+    created_date: "2024-02-01"
+    
+  admin_user:
+    username: "${ADMIN_USER_EMAIL:-admin.test@wordmate.es}"
+    password: "${ADMIN_USER_PASSWORD:-AdminSecure789!}"
+    first_name: "Admin"
+    last_name: "Test"
+    email: "${ADMIN_USER_EMAIL:-admin.test@wordmate.es}"
+    role: "admin"
+    status: "active"
+    permissions: ["read", "write", "delete", "admin"]
+    created_date: "2024-01-01"
+    
+  teacher_user:
+    username: "teacher.demo@wordmate.es"
+    password: "TeacherPass321!"
+    first_name: "Demo"
+    last_name: "Teacher"
+    email: "teacher.demo@wordmate.es"
+    role: "teacher"
+    status: "active"
+    school: "Demo School"
+    created_date: "2024-02-15"
+
+# Invalid test users for negative testing
+invalid_users:
+  invalid_email:
+    username: "invalid-email"
+    password: "ValidPassword123!"
+    first_name: "Invalid"
+    last_name: "Email"
+    
+  weak_password:
+    username: "weak.password@wordmate.es"
+    password: "123"
+    first_name: "Weak"
+    last_name: "Password"
+    
+  empty_credentials:
+    username: ""
+    password: ""
+    first_name: ""
+    last_name: ""
+    
+  special_characters:
+    username: "special<>chars@wordmate.es"
+    password: "SpecialPass!@#$%^&*()"
+    first_name: "Special"
+    last_name: "Characters"
+    
+  sql_injection_attempt:
+    username: "'; DROP TABLE users; --"
+    password: "' OR '1'='1"
+    first_name: "SQL"
+    last_name: "Injection"
+
+# Test users for different language preferences
+language_users:
+  spanish_user:
+    username: "usuario.espanol@wordmate.es"
+    password: "ContraseñaEspañol123!"
+    first_name: "Usuario"
+    last_name: "Español"
+    language: "es"
+    country: "ES"
+    
+  french_user:
+    username: "utilisateur.francais@wordmate.es"
+    password: "MotDePasseFrançais123!"
+    first_name: "Utilisateur"
+    last_name: "Français"
+    language: "fr"
+    country: "FR"
+    
+  german_user:
+    username: "benutzer.deutsch@wordmate.es"
+    password: "DeutschesPasswort123!"
+    first_name: "Benutzer"
+    last_name: "Deutsch"
+    language: "de"
+    country: "DE"
+
+# Test users for different subscription levels
+subscription_users:
+  free_tier:
+    username: "free.tier@wordmate.es"
+    password: "FreeTierPass123!"
+    first_name: "Free"
+    last_name: "Tier"
+    subscription: "free"
+    word_limit: 500
+    daily_limit: 50
+    
+  basic_tier:
+    username: "basic.tier@wordmate.es"
+    password: "BasicTierPass123!"
+    first_name: "Basic"
+    last_name: "Tier"
+    subscription: "basic"
+    word_limit: 2000
+    daily_limit: 200
+    
+  premium_tier:
+    username: "premium.tier@wordmate.es"
+    password: "PremiumTierPass123!"
+    first_name: "Premium"
+    last_name: "Tier"
+    subscription: "premium"
+    word_limit: "unlimited"
+    daily_limit: "unlimited"
+
+# Test users with different progress levels
+progress_users:
+  beginner_user:
+    username: "beginner.student@wordmate.es"
+    password: "BeginnerPass123!"
+    first_name: "Beginner"
+    last_name: "Student"
+    level: "beginner"
+    learned_words: 50
+    favorite_words: 25
+    study_streak: 5
+    
+  intermediate_user:
+    username: "intermediate.student@wordmate.es"
+    password: "IntermediatePass123!"
+    first_name: "Intermediate"
+    last_name: "Student"
+    level: "intermediate"
+    learned_words: 500
+    favorite_words: 150
+    study_streak: 30
+    
+  advanced_user:
+    username: "advanced.student@wordmate.es"
+    password: "AdvancedPass123!"
+    first_name: "Advanced"
+    last_name: "Student"
+    level: "advanced"
+    learned_words: 2000
+    favorite_words: 500
+    study_streak: 100
+
+# Test users for social login testing
+social_users:
+  google_user:
+    provider: "google"
+    provider_id: "google_test_user_123456"
+    email: "google.test@gmail.com"
+    first_name: "Google"
+    last_name: "User"
+    avatar_url: "https://lh3.googleusercontent.com/test-avatar"
+    
+  facebook_user:
+    provider: "facebook"
+    provider_id: "facebook_test_user_789012"
+    email: "facebook.test@facebook.com"
+    first_name: "Facebook"
+    last_name: "User"
+    avatar_url: "https://graph.facebook.com/test-avatar"
+
+# Test users with specific account states
+account_state_users:
+  inactive_user:
+    username: "inactive.user@wordmate.es"
+    password: "InactivePass123!"
+    first_name: "Inactive"
+    last_name: "User"
+    status: "inactive"
+    
+  suspended_user:
+    username: "suspended.user@wordmate.es"
+    password: "SuspendedPass123!"
+    first_name: "Suspended"
+    last_name: "User"
+    status: "suspended"
+    suspension_reason: "Terms violation"
+    
+  pending_user:
+    username: "pending.user@wordmate.es"
+    password: "PendingPass123!"
+    first_name: "Pending"
+    last_name: "User"
+    status: "pending"
+    verification_required: true
+
+# Test data for user registration
+registration_data:
+  valid_registration:
+    username: "new.user@wordmate.es"
+    password: "NewUserPass123!"
+    first_name: "New"
+    last_name: "User"
+    email: "new.user@wordmate.es"
+    terms_accepted: true
+    
+  duplicate_email:
+    username: "test.user@wordmate.es"  # Already exists
+    password: "DuplicatePass123!"
+    first_name: "Duplicate"
+    last_name: "Email"
+    
+  invalid_email_format:
+    username: "invalid-email-format"
+    password: "ValidPassword123!"
+    first_name: "Invalid"
+    last_name: "Format"
+
+# Test data for password reset
+password_reset_data:
+  valid_reset:
+    email: "test.user@wordmate.es"
+    new_password: "NewResetPassword123!"
+    
+  invalid_email:
+    email: "nonexistent@wordmate.es"
+    new_password: "ResetPassword123!"
+    
+  weak_new_password:
+    email: "test.user@wordmate.es"
+    new_password: "123"
+
+# Test data for profile updates
+profile_update_data:
+  valid_update:
+    first_name: "Updated"
+    last_name: "Name"
+    bio: "Updated user bio"
+    language: "es"
+    
+  invalid_update:
+    first_name: ""
+    last_name: "X" * 100  # Too long
+    bio: "X" * 1000  # Too long
+
+# Performance testing users
+performance_users:
+  load_test_users:
+    - username: "loadtest1@wordmate.es"
+      password: "LoadTest123!"
+    - username: "loadtest2@wordmate.es"
+      password: "LoadTest123!"
+    - username: "loadtest3@wordmate.es"
+      password: "LoadTest123!"
+    - username: "loadtest4@wordmate.es"
+      password: "LoadTest123!"
+    - username: "loadtest5@wordmate.es"
+      password: "LoadTest123!"
+
+# User preferences test data
+user_preferences:
+  theme_preferences:
+    - theme: "light"
+      font_size: "medium"
+      animations: true
+    - theme: "dark"
+      font_size: "large"
+      animations: false
+      
+  notification_preferences:
+    - email_notifications: true
+      push_notifications: false
+      daily_summary: true
+    - email_notifications: false
+      push_notifications: true
+      daily_summary: false
+      
+  study_preferences:
+    - auto_play_audio: true
+      show_pronunciation: true
+      study_reminders: true
+    - auto_play_audio: false
+      show_pronunciation: false
+      study_reminders: false

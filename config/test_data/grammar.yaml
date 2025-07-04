@@ -1,0 +1,345 @@
+# Test grammar data for WordMate application testing
+
+# Grammar exercise categories
+exercise_categories:
+  verb_tenses:
+    name: "Verb Tenses"
+    description: "Practice with past, present, and future verb forms"
+    difficulty_levels: ["beginner", "intermediate", "advanced"]
+    
+  conditionals:
+    name: "Conditional Sentences"
+    description: "First, second, and third conditional structures"
+    difficulty_levels: ["intermediate", "advanced"]
+    
+  prepositions:
+    name: "Prepositions"
+    description: "Time, place, and movement prepositions"
+    difficulty_levels: ["beginner", "intermediate"]
+    
+  modal_verbs:
+    name: "Modal Verbs"
+    description: "Can, could, should, must, might, and will"
+    difficulty_levels: ["intermediate", "advanced"]
+    
+  passive_voice:
+    name: "Passive Voice"
+    description: "Converting active to passive voice structures"
+    difficulty_levels: ["intermediate", "advanced"]
+
+# Sample grammar exercises for testing
+sample_exercises:
+  verb_tenses:
+    - id: "vt_001"
+      type: "fill_in_the_blank"
+      difficulty: "beginner"
+      question: "Yesterday, I _____ (go) to the store."
+      correct_answer: "went"
+      options: ["go", "went", "going", "gone"]
+      explanation: "Use past simple for completed actions in the past."
+      
+    - id: "vt_002"
+      type: "multiple_choice"
+      difficulty: "intermediate"
+      question: "By next week, she _____ the project."
+      correct_answer: "will have finished"
+      options: ["finishes", "will finish", "will have finished", "finished"]
+      explanation: "Future perfect expresses completion before a future time."
+      
+    - id: "vt_003"
+      type: "sentence_transformation"
+      difficulty: "advanced"
+      question: "Transform: 'I have been studying for three hours.'"
+      instruction: "Change to past perfect continuous"
+      correct_answer: "I had been studying for three hours."
+      
+  conditionals:
+    - id: "cond_001"
+      type: "fill_in_the_blank"
+      difficulty: "intermediate"
+      question: "If I _____ (have) more time, I would travel more."
+      correct_answer: "had"
+      options: ["have", "had", "having", "will have"]
+      explanation: "Second conditional uses past simple in the if-clause."
+      
+    - id: "cond_002"
+      type: "multiple_choice"
+      difficulty: "advanced"
+      question: "If you _____ earlier, you would have caught the train."
+      correct_answer: "had left"
+      options: ["left", "leave", "had left", "would leave"]
+      explanation: "Third conditional uses past perfect in the if-clause."
+      
+  prepositions:
+    - id: "prep_001"
+      type: "fill_in_the_blank"
+      difficulty: "beginner"
+      question: "The meeting is _____ Monday _____ 3 PM."
+      correct_answer: ["on", "at"]
+      explanation: "Use 'on' for days and 'at' for specific times."
+      
+    - id: "prep_002"
+      type: "multiple_choice"
+      difficulty: "intermediate"
+      question: "She has been working here _____ 2015."
+      correct_answer: "since"
+      options: ["for", "since", "from", "during"]
+      explanation: "Use 'since' with a specific starting point."
+
+  modal_verbs:
+    - id: "modal_001"
+      type: "multiple_choice"
+      difficulty: "intermediate"
+      question: "You _____ speak louder. I can't hear you."
+      correct_answer: "should"
+      options: ["can", "should", "might", "will"]
+      explanation: "Use 'should' for advice or recommendations."
+      
+    - id: "modal_002"
+      type: "fill_in_the_blank"
+      difficulty: "advanced"
+      question: "She _____ have arrived by now. The train was due an hour ago."
+      correct_answer: "should"
+      options: ["should", "could", "might", "will"]
+      explanation: "Use 'should' for logical deduction about the present."
+
+# Test data for exercise types
+exercise_types:
+  multiple_choice:
+    description: "Choose the correct answer from given options"
+    options_count: 4
+    scoring: "binary"  # correct/incorrect
+    
+  fill_in_the_blank:
+    description: "Complete the sentence with the correct word/phrase"
+    input_type: "text"
+    scoring: "exact_match"
+    
+  sentence_transformation:
+    description: "Transform the sentence according to given instructions"
+    input_type: "textarea"
+    scoring: "partial_credit"
+    
+  drag_and_drop:
+    description: "Drag words to complete the sentence"
+    interaction_type: "drag_drop"
+    scoring: "position_based"
+    
+  matching:
+    description: "Match items from two columns"
+    interaction_type: "matching"
+    scoring: "pair_based"
+
+# Test data for difficulty progression
+difficulty_progression:
+  beginner:
+    topics: ["present simple", "past simple", "basic prepositions"]
+    exercise_count: 10
+    pass_threshold: 70
+    
+  intermediate:
+    topics: ["present perfect", "conditionals", "modal verbs"]
+    exercise_count: 15
+    pass_threshold: 75
+    
+  advanced:
+    topics: ["passive voice", "subjunctive", "complex conditionals"]
+    exercise_count: 20
+    pass_threshold: 80
+
+# Test data for grammar explanations
+grammar_explanations:
+  present_simple:
+    rule: "Used for habits, general truths, and repeated actions"
+    structure: "Subject + base verb (+ s/es for 3rd person singular)"
+    examples:
+      - "I work every day."
+      - "She speaks English."
+      - "The sun rises in the east."
+    common_mistakes:
+      - "Using present continuous for habits"
+      - "Forgetting -s for 3rd person singular"
+      
+  past_simple:
+    rule: "Used for completed actions in the past"
+    structure: "Subject + past form of verb"
+    examples:
+      - "I worked yesterday."
+      - "She went to school."
+      - "They finished the project."
+    common_mistakes:
+      - "Using past continuous for simple completed actions"
+      - "Irregular verb forms"
+
+# Test data for exercise validation
+validation_test_data:
+  correct_answers:
+    - exercise_id: "vt_001"
+      user_answer: "went"
+      expected_result: "correct"
+      
+    - exercise_id: "cond_001"
+      user_answer: "had"
+      expected_result: "correct"
+      
+  incorrect_answers:
+    - exercise_id: "vt_001"
+      user_answer: "go"
+      expected_result: "incorrect"
+      feedback: "Use past simple for completed actions in the past."
+      
+    - exercise_id: "cond_001"
+      user_answer: "have"
+      expected_result: "incorrect"
+      feedback: "Second conditional requires past simple in the if-clause."
+      
+  partial_credit_answers:
+    - exercise_id: "vt_003"
+      user_answer: "I had been studying three hours."
+      expected_result: "partial"
+      score: 0.8
+      feedback: "Almost correct! Don't forget 'for' before the time duration."
+
+# Test data for grammar progress tracking
+progress_tracking:
+  user_progress:
+    completed_exercises: 45
+    correct_answers: 38
+    accuracy_rate: 84.4
+    weak_areas: ["conditionals", "prepositions"]
+    strong_areas: ["verb_tenses", "modal_verbs"]
+    study_time: 120  # minutes
+    
+  level_progression:
+    current_level: "intermediate"
+    exercises_to_advance: 25
+    completion_percentage: 60
+    estimated_completion_time: 180  # minutes
+
+# Test data for grammar quiz generation
+quiz_generation:
+  random_quiz:
+    exercise_count: 10
+    difficulty: "mixed"
+    categories: ["verb_tenses", "prepositions", "modal_verbs"]
+    time_limit: 900  # 15 minutes
+    
+  focused_quiz:
+    category: "conditionals"
+    exercise_count: 5
+    difficulty: "intermediate"
+    time_limit: 300  # 5 minutes
+    
+  adaptive_quiz:
+    starts_with: "beginner"
+    adapts_based_on: "accuracy"
+    max_exercises: 20
+    min_exercises: 5
+
+# Test data for grammar feedback
+feedback_system:
+  immediate_feedback:
+    correct_response: "Excellent! That's the correct answer."
+    incorrect_response: "Not quite right. Let me explain..."
+    hint_response: "Here's a hint to help you..."
+    
+  detailed_explanations:
+    rule_explanation: true
+    example_provided: true
+    common_mistakes: true
+    related_exercises: true
+    
+  encouragement_messages:
+    first_correct: "Great start! Keep it up!"
+    streak_5: "You're on fire! 5 correct answers in a row!"
+    streak_10: "Amazing! 10 correct answers! You're mastering this!"
+    improvement: "You're improving! Your accuracy has increased."
+
+# Test data for grammar exercise scoring
+scoring_system:
+  binary_scoring:
+    correct: 1
+    incorrect: 0
+    
+  weighted_scoring:
+    beginner_exercise: 1
+    intermediate_exercise: 1.5
+    advanced_exercise: 2
+    
+  time_bonus:
+    quick_answer: 0.2  # bonus for answering within 30% of time limit
+    normal_answer: 0
+    slow_answer: -0.1  # penalty for using full time limit
+
+# Test data for grammar reports
+reporting_data:
+  student_report:
+    total_exercises: 100
+    completed_exercises: 85
+    accuracy_by_category:
+      verb_tenses: 92
+      conditionals: 78
+      prepositions: 85
+      modal_verbs: 89
+    time_spent: 480  # minutes
+    
+  teacher_report:
+    class_average: 82
+    most_difficult_topic: "conditionals"
+    student_count: 25
+    completion_rate: 76
+    
+# Test data for grammar API responses
+api_responses:
+  exercise_list:
+    total_count: 150
+    page_size: 20
+    current_page: 1
+    has_next_page: true
+    
+  exercise_submission:
+    exercise_id: "vt_001"
+    user_answer: "went"
+    is_correct: true
+    score: 1
+    explanation: "Correct! Past simple is used for completed actions."
+    
+  progress_update:
+    total_score: 127
+    accuracy_rate: 84.7
+    level: "intermediate"
+    next_level_requirement: 150
+
+# Test data for edge cases
+edge_cases:
+  empty_answers:
+    - exercise_id: "vt_001"
+      user_answer: ""
+      expected_behavior: "prompt_for_answer"
+      
+  special_characters:
+    - exercise_id: "vt_001"
+      user_answer: "went!!!"
+      expected_behavior: "normalize_and_check"
+      
+  case_sensitivity:
+    - exercise_id: "vt_001"
+      user_answer: "WENT"
+      expected_behavior: "accept_as_correct"
+      
+  extra_spaces:
+    - exercise_id: "vt_001"
+      user_answer: "  went  "
+      expected_behavior: "trim_and_accept"
+
+# Test data for performance testing
+performance_test_data:
+  load_testing:
+    concurrent_users: 50
+    exercises_per_user: 20
+    response_time_threshold: 2.0  # seconds
+    
+  stress_testing:
+    max_concurrent_users: 200
+    peak_exercises_per_minute: 1000
+    memory_usage_threshold: 512  # MB

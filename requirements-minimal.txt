@@ -1,0 +1,8 @@
+# Minimal requirements for Robot Framework automation
+robotframework
+robotframework-seleniumlibrary
+robotframework-requests
+selenium
+webdriver-manager
+requests
+pyyaml

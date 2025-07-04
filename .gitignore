@@ -1,0 +1,126 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Robot Framework
+log.html
+output.xml
+report.html
+selenium-screenshot-*.png
+**/results/
+**/reports/html/*
+**/reports/xml/*
+**/reports/screenshots/*
+**/logs/
+*.log
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Sensitive configuration files
+config/environments/local.yaml
+config/environments/secrets.yaml
+config/test_data/sensitive/
+config/test_data/users_real.yaml
+config/test_data/credentials.yaml
+**/credentials.json
+**/secrets.json
+**/passwords.*
+**/*password*
+**/*secret*
+**/*token*
+**/*key*.json
+**/*credential*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Browser drivers
+drivers/
+geckodriver*
+chromedriver*
+msedgedriver*
+
+# Test data
+test_data/sensitive/
+config/test_data/sensitive/
+**/test_data/real_*
+**/sensitive_data.*
+environment_validation.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Screenshots and videos
+screenshots/
+videos/
+allure-results/
+allure-report/

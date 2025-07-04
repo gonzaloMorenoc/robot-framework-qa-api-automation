@@ -1,0 +1,569 @@
+name: WordMate QA - Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to test against'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - production
+      test_suite:
+        description: 'Test suite to run'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+        - smoke
+        - api
+        - ui
+        - integration
+        - all
+      browser:
+        description: 'Browser for UI tests'
+        required: false
+        default: 'chrome'
+        type: choice
+        options:
+        - chrome
+        - firefox
+        - edge
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  
+jobs:
+  setup:
+    name: Setup and Validation
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.config.outputs.environment }}
+      test_suite: ${{ steps.config.outputs.test_suite }}
+      browser: ${{ steps.config.outputs.browser }}
+      should_run_tests: ${{ steps.config.outputs.should_run_tests }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure test parameters
+      id: config
+      run: |
+        # Determine environment based on branch and inputs
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+          TEST_SUITE="${{ github.event.inputs.test_suite }}"
+          BROWSER="${{ github.event.inputs.browser }}"
+        elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          ENVIRONMENT="production"
+          TEST_SUITE="smoke"
+          BROWSER="chrome"
+        elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+          ENVIRONMENT="dev"
+          TEST_SUITE="smoke"
+          BROWSER="chrome"
+        else
+          ENVIRONMENT="dev"
+          TEST_SUITE="smoke"
+          BROWSER="chrome"
+        fi
+        
+        echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+        echo "test_suite=$TEST_SUITE" >> $GITHUB_OUTPUT
+        echo "browser=$BROWSER" >> $GITHUB_OUTPUT
+        echo "should_run_tests=true" >> $GITHUB_OUTPUT
+        
+        echo "Configuration:"
+        echo "  Environment: $ENVIRONMENT"
+        echo "  Test Suite: $TEST_SUITE"
+        echo "  Browser: $BROWSER"
+    
+    - name: Validate configuration files
+      run: |
+        echo "Validating configuration files..."
+        python -c "import yaml; yaml.safe_load(open('config/environments/dev.yaml'))"
+        python -c "import yaml; yaml.safe_load(open('config/environments/production.yaml'))"
+        echo "Configuration files are valid"
+
+  lint_and_format:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.should_run_tests == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install black flake8 isort robotframework-lint
+        
+    - name: Run Python code formatting check
+      run: |
+        echo "Checking Python code formatting with Black..."
+        black --check --diff resources/libraries/
+        
+    - name: Run Python linting
+      run: |
+        echo "Running Python linting with Flake8..."
+        flake8 resources/libraries/ --max-line-length=120 --ignore=E203,W503
+        
+    - name: Run import sorting check
+      run: |
+        echo "Checking import sorting with isort..."
+        isort --check-only --diff resources/libraries/
+        
+    - name: Run Robot Framework linting
+      run: |
+        echo "Running Robot Framework linting..."
+        python -m robot.libdoc resources/libraries/WordmateAPI.py
+        echo "Robot Framework files are valid"
+
+  security_scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.should_run_tests == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+        
+    - name: Run Bandit security scan
+      run: |
+        echo "Running Bandit security scan..."
+        bandit -r resources/libraries/ -f json -o bandit-report.json || true
+        bandit -r resources/libraries/
+        
+    - name: Check for known security vulnerabilities
+      run: |
+        echo "Checking for known security vulnerabilities..."
+        safety check --json || true
+        safety check
+        
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-scan-results
+        path: bandit-report.json
+
+  api_tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: [setup, lint_and_format]
+    if: needs.setup.outputs.should_run_tests == 'true' && (needs.setup.outputs.test_suite == 'api' || needs.setup.outputs.test_suite == 'all' || needs.setup.outputs.test_suite == 'smoke')
+    strategy:
+      matrix:
+        test_type: [auth, vocabulary, grammar]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Create reports directory
+      run: |
+        mkdir -p reports/ci/api/${{ matrix.test_type }}
+        
+    - name: Run API tests
+      env:
+        ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        JWT_SECRET_PROD: ${{ secrets.JWT_SECRET_PROD }}
+        GOOGLE_CLIENT_ID_PROD: ${{ secrets.GOOGLE_CLIENT_ID_PROD }}
+        FACEBOOK_APP_ID_PROD: ${{ secrets.FACEBOOK_APP_ID_PROD }}
+        PROD_TEST_USER: ${{ secrets.PROD_TEST_USER }}
+        PROD_TEST_PASSWORD: ${{ secrets.PROD_TEST_PASSWORD }}
+      run: |
+        python scripts/run_tests.py \
+          --env ${{ needs.setup.outputs.environment }} \
+          --suite api/${{ matrix.test_type }} \
+          --include-tags smoke \
+          --log-level INFO
+      continue-on-error: true
+      
+    - name: Upload API test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: api-test-results-${{ matrix.test_type }}
+        path: |
+          reports/**/*
+          logs/**/*
+        retention-days: 30
+
+  ui_tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    needs: [setup, lint_and_format]
+    if: needs.setup.outputs.should_run_tests == 'true' && (needs.setup.outputs.test_suite == 'ui' || needs.setup.outputs.test_suite == 'all' || needs.setup.outputs.test_suite == 'smoke')
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+        test_type: [auth, vocabulary, navigation]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Setup Chrome
+      if: matrix.browser == 'chrome'
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+        
+    - name: Setup Firefox
+      if: matrix.browser == 'firefox'
+      uses: browser-actions/setup-firefox@latest
+      with:
+        firefox-version: latest
+        
+    - name: Install WebDriver
+      run: |
+        python scripts/setup_environment.py --update-drivers
+        
+    - name: Create reports directory
+      run: |
+        mkdir -p reports/ci/ui/${{ matrix.test_type }}/${{ matrix.browser }}
+        
+    - name: Run UI tests
+      env:
+        ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+        BROWSER: ${{ matrix.browser }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1920x1080x24 &
+        
+        python scripts/run_tests.py \
+          --env ${{ needs.setup.outputs.environment }} \
+          --suite ui/${{ matrix.test_type }} \
+          --include-tags smoke \
+          --log-level INFO
+      continue-on-error: true
+      
+    - name: Upload UI test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: ui-test-results-${{ matrix.test_type }}-${{ matrix.browser }}
+        path: |
+          reports/**/*
+          logs/**/*
+        retention-days: 30
+        
+    - name: Upload screenshots
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: ui-test-screenshots-${{ matrix.test_type }}-${{ matrix.browser }}
+        path: reports/**/screenshots/
+        retention-days: 7
+
+  smoke_tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [setup, lint_and_format]
+    if: needs.setup.outputs.should_run_tests == 'true' && needs.setup.outputs.test_suite == 'smoke'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+        
+    - name: Install WebDriver
+      run: |
+        python scripts/setup_environment.py --update-drivers
+        
+    - name: Create reports directory
+      run: |
+        mkdir -p reports/ci/smoke
+        
+    - name: Run smoke tests
+      env:
+        ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        JWT_SECRET_PROD: ${{ secrets.JWT_SECRET_PROD }}
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1920x1080x24 &
+        
+        python scripts/run_tests.py \
+          --env ${{ needs.setup.outputs.environment }} \
+          --suite smoke \
+          --parallel 2 \
+          --log-level INFO
+      continue-on-error: true
+      
+    - name: Upload smoke test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: smoke-test-results
+        path: |
+          reports/**/*
+          logs/**/*
+        retention-days: 30
+
+  integration_tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [setup, api_tests, ui_tests]
+    if: needs.setup.outputs.should_run_tests == 'true' && (needs.setup.outputs.test_suite == 'integration' || needs.setup.outputs.test_suite == 'all')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@latest
+      with:
+        chrome-version: stable
+        
+    - name: Install WebDriver
+      run: |
+        python scripts/setup_environment.py --update-drivers
+        
+    - name: Create reports directory
+      run: |
+        mkdir -p reports/ci/integration
+        
+    - name: Run integration tests
+      env:
+        ENVIRONMENT: ${{ needs.setup.outputs.environment }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      run: |
+        export DISPLAY=:99
+        Xvfb :99 -screen 0 1920x1080x24 &
+        
+        python scripts/run_tests.py \
+          --env ${{ needs.setup.outputs.environment }} \
+          --suite integration \
+          --log-level INFO
+      continue-on-error: true
+      
+    - name: Upload integration test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: integration-test-results
+        path: |
+          reports/**/*
+          logs/**/*
+        retention-days: 30
+
+  generate_report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [setup, smoke_tests, api_tests, ui_tests]
+    if: always() && needs.setup.outputs.should_run_tests == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Download all test artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: downloaded-artifacts
+        
+    - name: Consolidate test results
+      run: |
+        mkdir -p consolidated-reports
+        find downloaded-artifacts -name "*.xml" -exec cp {} consolidated-reports/ \;
+        find downloaded-artifacts -name "*.html" -exec cp {} consolidated-reports/ \;
+        
+    - name: Generate consolidated report
+      run: |
+        python scripts/generate_report.py \
+          --input-dir consolidated-reports \
+          --output-dir final-reports \
+          --environment ${{ needs.setup.outputs.environment }}
+      continue-on-error: true
+      
+    - name: Upload consolidated report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: consolidated-test-report
+        path: final-reports/
+        retention-days: 90
+        
+    - name: Comment PR with test results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Read test summary (this would be generated by the report script)
+          let summary = '## Test Results Summary\n\n';
+          summary += `**Environment:** ${{ needs.setup.outputs.environment }}\n`;
+          summary += `**Test Suite:** ${{ needs.setup.outputs.test_suite }}\n\n`;
+          
+          // Add test results links
+          summary += '### Artifacts\n';
+          summary += '- [Consolidated Test Report](consolidated-test-report)\n';
+          summary += '- [API Test Results](api-test-results)\n';
+          summary += '- [UI Test Results](ui-test-results)\n';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });
+
+  notify:
+    name: Notification
+    runs-on: ubuntu-latest
+    needs: [setup, generate_report, api_tests, ui_tests, smoke_tests]
+    if: always() && needs.setup.outputs.should_run_tests == 'true'
+    
+    steps:
+    - name: Determine overall status
+      id: status
+      run: |
+        if [[ "${{ needs.api_tests.result }}" == "success" && 
+              "${{ needs.ui_tests.result }}" == "success" && 
+              "${{ needs.smoke_tests.result }}" == "success" ]]; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=All tests passed successfully! ✅" >> $GITHUB_OUTPUT
+        elif [[ "${{ needs.api_tests.result }}" == "failure" || 
+                "${{ needs.ui_tests.result }}" == "failure" || 
+                "${{ needs.smoke_tests.result }}" == "failure" ]]; then
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "message=Some tests failed! ❌" >> $GITHUB_OUTPUT
+        else
+          echo "status=warning" >> $GITHUB_OUTPUT
+          echo "message=Tests completed with warnings! ⚠️" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Notify team
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+      run: |
+        echo "Notification would be sent here"
+        echo "Status: ${{ steps.status.outputs.status }}"
+        echo "Message: ${{ steps.status.outputs.message }}"
+        echo "Environment: ${{ needs.setup.outputs.environment }}"
+        echo "Commit: ${{ github.sha }}"
