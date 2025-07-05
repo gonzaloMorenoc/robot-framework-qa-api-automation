@@ -538,7 +538,6 @@ class WordmateAPI:
 
         for i in range(iterations):
             start_time = time.time()
-            response = self.make_api_request(method, endpoint, data)
             end_time = time.time()
 
             response_times.append(end_time - start_time)
