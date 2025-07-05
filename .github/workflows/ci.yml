@@ -140,7 +140,7 @@ jobs:
     - name: Run Robot Framework linting
       run: |
         echo "Running Robot Framework linting..."
-        python -m robot.libdoc resources/libraries/WordmateAPI.py
+        python -m robot.libdoc resources/libraries/WordmateAPI.py output.html
         echo "Robot Framework files are valid"
 
   security_scan:
