@@ -9,7 +9,7 @@ import json
 import jwt
 import requests
 import time
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 from robot.api.deco import keyword
 from robot.api import logger
 from requests.adapters import HTTPAdapter
