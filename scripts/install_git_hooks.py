@@ -35,6 +35,7 @@ false_positive_exclusions = [
     ("scripts/install_git_hooks.py", 89),
 ]
 
+
 class GitHooksInstaller:
     """Installs and manages git hooks for WordMate project"""
 

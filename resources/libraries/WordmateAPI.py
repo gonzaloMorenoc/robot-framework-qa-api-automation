@@ -381,6 +381,7 @@ class WordmateAPI:
         """
         if provider.lower() == "google":
             import os
+
             client_id = os.getenv("GOOGLE_CLIENT_ID")
             scope = "email profile"
             return (
