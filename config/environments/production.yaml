@@ -13,11 +13,11 @@ web:
   screenshot_on_failure: ${PROD_SCREENSHOT_ON_FAILURE:-true}
   
 database:
-  host: "${PROD_DB_HOST}"
-  port: ${PROD_DB_PORT:-3306}
-  name: "${PROD_DB_NAME}"
-  username: "${PROD_DB_USERNAME}"
-  password: "${PROD_DB_PASSWORD}"
+  host: "${DB_HOST}"
+  port: ${DB_PORT:-3306}
+  name: "${DB_NAME}"
+  username: "${DB_USERNAME}"
+  password: "${DB_PASSWORD}"
   
 api:
   timeout: ${PROD_API_TIMEOUT:-30}
