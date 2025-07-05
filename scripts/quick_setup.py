@@ -6,9 +6,9 @@ This script guides users through the initial setup process
 and creates necessary configuration files securely.
 """
 
+import getpass
 import os
 import sys
-import getpass
 from pathlib import Path
 
 # Add project root to Python path

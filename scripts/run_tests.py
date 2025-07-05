@@ -11,13 +11,14 @@ Usage:
     python scripts/run_tests.py --help
 """
 
-import os
-import sys
 import argparse
+import os
 import subprocess
-import yaml
+import sys
 from datetime import datetime
 from pathlib import Path
+
+import yaml
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent

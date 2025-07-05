@@ -8,11 +8,12 @@ for WordMate application without exposing sensitive data.
 
 import os
 import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, Optional
+
 import requests
 import yaml
-from pathlib import Path
-from typing import Dict, Any, Optional
-import time
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent

@@ -12,17 +12,17 @@ Usage:
     python scripts/generate_report.py --open
 """
 
-import os
-import sys
 import argparse
-import json
-import xml.etree.ElementTree as ET
-from pathlib import Path
-from datetime import datetime, timedelta
-import shutil
-import webbrowser
-from typing import Dict, List, Optional, Any
 import base64
+import json
+import os
+import shutil
+import sys
+import webbrowser
+import xml.etree.ElementTree as ET
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -32,8 +32,8 @@ try:
     import matplotlib
 
     matplotlib.use("Agg")  # Use non-interactive backend
-    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
     from matplotlib.patches import Wedge
 
     MATPLOTLIB_AVAILABLE = True
@@ -42,7 +42,7 @@ except ImportError:
     print("Warning: matplotlib not available. Charts will not be generated.")
 
 try:
-    from jinja2 import Template, Environment, FileSystemLoader
+    from jinja2 import Environment, FileSystemLoader, Template
 
     JINJA2_AVAILABLE = True
 except ImportError:

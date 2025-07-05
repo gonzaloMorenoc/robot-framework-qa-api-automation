@@ -7,9 +7,9 @@ committing sensitive data to the repository.
 """
 
 import os
-import sys
 import shutil
 import stat
+import sys
 from pathlib import Path
 
 # Add project root to Python path

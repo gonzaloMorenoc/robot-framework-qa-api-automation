@@ -6,9 +6,9 @@ This script handles compatible installation of dependencies
 based on the Python version and platform.
 """
 
-import sys
-import subprocess
 import platform
+import subprocess
+import sys
 from pathlib import Path
 
 

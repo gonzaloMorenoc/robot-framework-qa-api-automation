@@ -12,18 +12,19 @@ Usage:
     python scripts/setup_environment.py --validate-only
 """
 
-import os
-import sys
-import platform
-import subprocess
 import argparse
-import requests
-import zipfile
-import tarfile
+import json
+import os
+import platform
 import shutil
+import subprocess
+import sys
+import tarfile
+import zipfile
 from pathlib import Path
 from urllib.parse import urljoin
-import json
+
+import requests
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
