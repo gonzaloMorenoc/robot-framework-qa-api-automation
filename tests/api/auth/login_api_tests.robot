@@ -6,8 +6,8 @@ Library          String
 Library          JSONLibrary
 Library          ../../../resources/libraries/WordmateAPI.py
 Resource         ../../../resources/keywords/api/auth_api_keywords.robot
-Variables        ../../../resources/variables/common_variables.robot
-Variables        ../../../resources/variables/api_endpoints.robot
+Variables        ../../../resources/variables/common_variables.py
+Variables        ../../../resources/variables/api_endpoints.py
 Variables        ../../../config/test_data/users.yaml
 Suite Setup      Setup API Test Suite
 Suite Teardown   Teardown API Test Suite

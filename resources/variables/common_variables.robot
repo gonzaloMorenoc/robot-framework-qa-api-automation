@@ -153,13 +153,21 @@ ${TOAST_WARNING}                css:.toast.warning
 ${TOAST_INFO}                   css:.toast.info
 
 # API Response Status Codes
-${HTTP_OK}                      200
-${HTTP_CREATED}                 201
-${HTTP_BAD_REQUEST}             400
-${HTTP_UNAUTHORIZED}            401
-${HTTP_FORBIDDEN}               403
-${HTTP_NOT_FOUND}               404
-${HTTP_INTERNAL_SERVER_ERROR}   500
+${HTTP_OK}                  200
+${HTTP_CREATED}             201
+${HTTP_ACCEPTED}            202
+${HTTP_NO_CONTENT}          204
+${HTTP_BAD_REQUEST}         400
+${HTTP_UNAUTHORIZED}        401
+${HTTP_FORBIDDEN}           403
+${HTTP_NOT_FOUND}           404
+${HTTP_METHOD_NOT_ALLOWED}  405
+${HTTP_CONFLICT}            409
+${HTTP_UNPROCESSABLE}       422
+${HTTP_TOO_MANY_REQUESTS}   429
+${HTTP_INTERNAL_ERROR}      500
+${HTTP_BAD_GATEWAY}         502
+${HTTP_SERVICE_UNAVAILABLE} 503
 
 # Test Tags
 ${TAG_SMOKE}                    smoke

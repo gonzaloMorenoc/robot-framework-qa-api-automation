@@ -57,6 +57,7 @@ selenium-screenshot-*.png
 **/reports/screenshots/*
 **/logs/
 *.log
+/reports/
 
 # Environment variables and secrets
 .env

@@ -5,6 +5,7 @@ robotframework-databaselibrary==1.4.4
 robotframework-faker==5.0.0
 robotframework-pabot==2.18.0
 robotframework-browser==18.8.0
+robotframework-jsonlibrary>=0.5
 selenium==4.26.1
 requests==2.32.3
 PyMySQL==1.1.1
@@ -20,4 +21,4 @@ pandas==2.2.3
 pillow==10.4.0
 cryptography==43.0.3
 python-dotenv==1.0.1
-PyJWT
+PyJWT>=2.8.0
