@@ -1,39 +1,39 @@
-name: WordMate QA - Nightly Tests
+# on:
+#   schedule:
+#     # Run nightly tests at 2 AM UTC (3 AM CET, 4 AM CEST)
+#     - cron: '0 2 * * *'
+#   workflow_dispatch:
+#     inputs:
+#       environment:
+#         description: 'Environment to test'
+#         required: true
+#         default: 'dev'
+#         type: choice
+#         options:
+#         - dev
+#         - production
+#       test_depth:
+#         description: 'Test depth level'
+#         required: true
+#         default: 'full'
+#         type: choice
+#         options:
+#         - smoke
+#         - regression
+#         - full
+#         - performance
+#       browsers:
+#         description: 'Browsers to test (comma-separated)'
+#         required: false
+#         default: 'chrome,firefox,edge'
+#         type: string
+#       parallel_processes:
+#         description: 'Number of parallel processes'
+#         required: false
+#         default: '4'
+#         type: string
 
-on:
-  schedule:
-    # Run nightly tests at 2 AM UTC (3 AM CET, 4 AM CEST)
-    - cron: '0 2 * * *'
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to test'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-        - dev
-        - production
-      test_depth:
-        description: 'Test depth level'
-        required: true
-        default: 'full'
-        type: choice
-        options:
-        - smoke
-        - regression
-        - full
-        - performance
-      browsers:
-        description: 'Browsers to test (comma-separated)'
-        required: false
-        default: 'chrome,firefox,edge'
-        type: string
-      parallel_processes:
-        description: 'Number of parallel processes'
-        required: false
-        default: '4'
-        type: string
+name: WordMate QA - Nightly Tests
 
 env:
   PYTHON_VERSION: '3.11'
