@@ -13,6 +13,7 @@ Usage:
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime
@@ -35,14 +36,33 @@ class WordMateTestRunner:
         self.tests_dir = self.project_root / "tests"
 
     def load_environment_config(self, environment):
-        """Load environment configuration from YAML file"""
+        """Load environment configuration from YAML file with environment variable substitution"""
         config_file = self.config_dir / "environments" / f"{environment}.yaml"
 
         if not config_file.exists():
             raise FileNotFoundError(f"Environment config not found: {config_file}")
 
         with open(config_file, "r") as f:
-            return yaml.safe_load(f)
+            content = f.read()
+            
+            import re
+            import os
+            
+            def replace_env_var(match):
+                var_name = match.group(1)
+                default_value = match.group(2) if len(match.groups()) >= 2 and match.group(2) else ""
+                return os.getenv(var_name, default_value)
+
+            # Replace ${VAR:-default} patterns (note the corrected regex)
+            content = re.sub(
+                r"\$\{([^}:]+)(?::-([^}]*))?\}", replace_env_var, content
+            )
+            # Replace ${VAR} patterns
+            content = re.sub(
+                r"\$\{([^}]+)\}", lambda m: os.getenv(m.group(1), ""), content
+            )
+
+            return yaml.safe_load(content)
 
     def create_reports_directory(self, environment):
         """Create reports directory for the environment"""

@@ -36,7 +36,7 @@ Get Vocabulary List With Pagination
     [Documentation]    Test vocabulary list with pagination parameters
     [Tags]    positive    pagination
     Given User Is Authenticated Via API
-    When User Requests Vocabulary List With Page    2    And Limit    25
+    When User Requests Vocabulary List With Page And Limit    2    25
     Then Vocabulary List Should Be Returned
     And Response Should Contain Correct Page Info
     And Word Count Should Match Limit
